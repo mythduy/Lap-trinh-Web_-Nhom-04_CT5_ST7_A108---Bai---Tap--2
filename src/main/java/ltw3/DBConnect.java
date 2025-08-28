@@ -7,8 +7,8 @@ import java.sql.ResultSet;
 public class DBConnect {
 	
 	private static final String URL = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "user";
-    private static final String PASSWORD = "pass123";
+    private static final String USER = "user"; // Đổi thành user thật nếu khác
+    private static final String PASSWORD = "pass123"; // Đổi thành password thật nếu khác
 
     public static Connection getConnection() throws SQLException {
         try {
@@ -25,7 +25,8 @@ public class DBConnect {
                 System.out.println("Kết nối MySQL thành công!");
 
                 try (Statement stmt = conn.createStatement()) {
-                    String sql = "SELECT id, username, email FROM users";
+                    // Lấy thêm trường password
+                    String sql = "SELECT id, username, email, password FROM users";
                     ResultSet rs = stmt.executeQuery(sql);
 
                     System.out.println("Danh sách users:");
@@ -33,7 +34,8 @@ public class DBConnect {
                         int id = rs.getInt("id");
                         String username = rs.getString("username");
                         String email = rs.getString("email");
-                        System.out.println("ID: " + id + " | Username: " + username + " | Email: " + email);
+                        String password = rs.getString("password");
+                        System.out.println("ID: " + id + " | Username: " + username + " | Email: " + email + " | Password: " + password);
                     }
                 }
 
