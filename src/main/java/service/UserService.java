@@ -55,4 +55,13 @@ public class UserService {
     public User getUserByUsername(String username) {
         return userDAO.getUserByUsername(username);
     }
+
+    public User getUserByEmail(String email) {
+        return userDAO.getUserByEmail(email);
+    }
+
+    public boolean updatePasswordByEmail(String email, String newPassword) {
+        if (email == null || newPassword == null) return false;
+        return userDAO.updatePasswordByEmail(email.trim(), newPassword.trim());
+    }
 }
