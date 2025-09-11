@@ -1,7 +1,7 @@
 package service;
 
 import dao.UserDao;
-import model.User;
+import model.AppUser;
 
 public class UserService {
     private UserDao userDAO;
@@ -15,7 +15,7 @@ public class UserService {
             return false;
         }
 
-        User user = userDAO.getUserByUsername(username);
+        AppUser user = userDAO.getUserByUsername(username);
 
         if (user != null) {
             // Loại bỏ khoảng trắng ở hai đầu password (nếu có)
@@ -47,16 +47,16 @@ public class UserService {
 
         // Loại bỏ khoảng trắng ở hai đầu password khi lưu
         if (password != null) password = password.trim();
-        User newUser = new User(username, email, password);
+        AppUser newUser = new AppUser(username, email, password);
 
         return userDAO.insertUser(newUser);
     }
 
-    public User getUserByUsername(String username) {
+    public AppUser getUserByUsername(String username) {
         return userDAO.getUserByUsername(username);
     }
 
-    public User getUserByEmail(String email) {
+    public AppUser getUserByEmail(String email) {
         return userDAO.getUserByEmail(email);
     }
 

@@ -1,7 +1,7 @@
 package controller;
 
 import service.UserService;
-import model.User;
+import model.AppUser;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -33,7 +33,7 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        User user = userService.getUserByEmail(email);
+        AppUser user = userService.getUserByEmail(email);
         if (user == null) {
             request.setAttribute("error", "Email not found");
             request.getRequestDispatcher("forgot_password.jsp").forward(request, response);

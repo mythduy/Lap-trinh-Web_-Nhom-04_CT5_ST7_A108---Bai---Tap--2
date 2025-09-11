@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="model.User" %>
+<%@ page import="model.AppUser" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +42,7 @@
 <body>
     <%
         // Check if user is logged in
-        User user = (User) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("user");
         if (user == null) {
             response.sendRedirect("login.jsp");
             return;

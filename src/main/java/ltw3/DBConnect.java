@@ -6,8 +6,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 public class DBConnect {
 	
-	private static final String URL = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "user"; // Đổi thành user thật nếu khác
+private static final String URL = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";    private static final String USER = "user"; // Đổi thành user thật nếu khác
     private static final String PASSWORD = "pass123"; // Đổi thành password thật nếu khác
 
     public static Connection getConnection() throws SQLException {

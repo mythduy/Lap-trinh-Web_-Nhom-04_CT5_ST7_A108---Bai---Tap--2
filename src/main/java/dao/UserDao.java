@@ -1,204 +1,117 @@
 package dao;
 
-import model.User;
-import java.sql.*;
+import model.AppUser;
+import entity.User;
+import jakarta.persistence.*;
+import java.util.List;
 
 public class UserDao {
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("dataSource");
 
-    public User getUserByUsername(String username) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        User user = null;
-
-        try {
-            conn = DBConnection.getConnection();
-            String sql = "SELECT * FROM users WHERE username = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, username);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
+    private AppUser toModelUser(entity.User entityUser) {
+        if (entityUser == null) return null;
+        AppUser user = new AppUser();
+        user.setId(entityUser.getId() != null ? entityUser.getId().intValue() : 0);
+        user.setUsername(entityUser.getName());
+        user.setEmail(entityUser.getEmail() != null ? entityUser.getEmail() : "");
+        user.setPassword(entityUser.getPassword() != null ? entityUser.getPassword() : "");
+        user.setRoleId(entityUser.getRoleId());
         return user;
+    }
+
+    public AppUser getUserByUsername(String username) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            TypedQuery<entity.User> query = em.createQuery("SELECT u FROM User u WHERE u.name = :username", entity.User.class);
+            query.setParameter("username", username);
+            List<entity.User> result = query.getResultList();
+            if (result.isEmpty()) return null;
+            return toModelUser(result.get(0));
+        } finally {
+            em.close();
+        }
     }
 
     public boolean checkUserExists(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return false;
-        }
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        boolean exists = false;
-
+        EntityManager em = emf.createEntityManager();
         try {
-            conn = DBConnection.getConnection();
-            String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, username);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                exists = rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+            TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.name = :username", Long.class);
+            query.setParameter("username", username);
+            return query.getSingleResult() > 0;
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            em.close();
         }
-
-        return exists;
     }
 
     public boolean checkEmailExists(String email) {
-        if (email == null || email.trim().isEmpty()) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class);
+            query.setParameter("email", email);
+            return query.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean insertUser(AppUser user) {
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            entity.User entityUser = new entity.User();
+            entityUser.setName(user.getUsername());
+            entityUser.setEmail(user.getEmail());
+            entityUser.setPassword(user.getPassword());
+            entityUser.setRoleId(user.getRoleId());
+            em.persist(entityUser);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            e.printStackTrace();
             return false;
-        }
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        boolean exists = false;
-
-        try {
-            conn = DBConnection.getConnection();
-            String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, email);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                exists = rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            em.close();
         }
-
-        return exists;
     }
 
-    public boolean insertUser(User user) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        boolean success = false;
-
+    public AppUser getUserByEmail(String email) {
+        EntityManager em = emf.createEntityManager();
         try {
-            conn = DBConnection.getConnection();
-            String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getPassword());
-
-            int rowsAffected = stmt.executeUpdate();
-            success = rowsAffected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            TypedQuery<entity.User> query = em.createQuery("SELECT u FROM User u WHERE u.email = :email", entity.User.class);
+            query.setParameter("email", email);
+            List<entity.User> result = query.getResultList();
+            if (result.isEmpty()) return null;
+            return toModelUser(result.get(0));
         } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            em.close();
         }
-
-        return success;
-    }
-
-    public User getUserByEmail(String email) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        User user = null;
-
-        try {
-            conn = DBConnection.getConnection();
-            String sql = "SELECT * FROM users WHERE email = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, email);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return user;
     }
 
     public boolean updatePasswordByEmail(String email, String newPassword) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        boolean success = false;
-
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            conn = DBConnection.getConnection();
-            String sql = "UPDATE users SET password = ? WHERE email = ?";
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, newPassword);
-            stmt.setString(2, email);
-
-            int rowsAffected = stmt.executeUpdate();
-            success = rowsAffected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (conn != null) DBConnection.closeConnection(conn);
-            } catch (SQLException e) {
-                e.printStackTrace();
+            tx.begin();
+            TypedQuery<entity.User> query = em.createQuery("SELECT u FROM User u WHERE u.email = :email", entity.User.class);
+            query.setParameter("email", email);
+            List<entity.User> result = query.getResultList();
+            if (result.isEmpty()) {
+                tx.rollback();
+                return false;
             }
+            entity.User entityUser = result.get(0);
+            entityUser.setPassword(newPassword);
+            em.merge(entityUser);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
         }
-
-        return success;
     }
 }

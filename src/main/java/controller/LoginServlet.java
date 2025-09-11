@@ -1,7 +1,7 @@
 package controller;
 
 import service.UserService;
-import model.User;
+import model.AppUser;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -49,10 +49,20 @@ public class LoginServlet extends HttpServlet {
         System.out.println("Authenticated: " + authenticated);
 
         if (authenticated) {
-            User user = userService.getUserByUsername(username);
+            AppUser user = userService.getUserByUsername(username);
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
-            response.sendRedirect("home.jsp");
+            // Chuyển hướng theo roleId
+            int roleId = user.getRoleId();
+            if (roleId == 1) {
+                response.sendRedirect(request.getContextPath() + "/user/home");
+            } else if (roleId == 2) {
+                response.sendRedirect(request.getContextPath() + "/manager/home");
+            } else if (roleId == 3) {
+                response.sendRedirect(request.getContextPath() + "/admin/home");
+            } else {
+                response.sendRedirect("login.jsp");
+            }
         } else {
             // Đảm bảo luôn báo lỗi nếu sai tài khoản hoặc mật khẩu
             request.setAttribute("error", "Invalid username or password");
